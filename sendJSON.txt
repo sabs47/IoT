@@ -1,0 +1,87 @@
+
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+#include <ArduinoJson.h>
+
+const char* ssid = "FiberBox-DCF";
+const char* password = "ouverture";
+
+void setup() 
+{
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) 
+  {
+    delay(1000);
+    Serial.println("Connecting...");
+  }
+}
+
+void loop() 
+{
+  if (WiFi.status() == WL_CONNECTED) 
+  {
+    HTTPClient http; //Object of class HTTPClient
+
+StaticJsonBuffer<500> jsonBuffer;
+
+  JsonObject &root = jsonBuffer.createObject();
+  JsonArray &id = root.createNestedArray("id");
+  id.add("Room30");
+  JsonArray &tempValues = root.createNestedArray("temperature");
+  tempValues.add(25);
+  JsonArray &humiValues = root.createNestedArray("pressure");
+  humiValues.add(90);
+ 
+  
+/*method post json*/
+  String json = "{ \"id\": \"Room30\", \"type\": \"Room\", \"temperature\": { \"value\":24,\"type\":\"Float\"}, \"pressure\": { \"value\":62,\"type\":\"Integer\"}}";
+            
+ // root.prettyPrintTo(json);
+Serial.println(json);
+    http.begin("http://41.82.243.55:1026/v2/entities/");      //Specify request destination
+    http.addHeader("Content-Type", "application/json");  //Specify content-type header
+    
+    
+    int httpCode = http.POST(json);   //Send the request
+    String payload = http.getString();                  //Get the response payload
+ 
+   Serial.println(httpCode);   //Print HTTP return code
+   Serial.println(payload);
+
+
+
+   
+    
+    /* method get json
+    http.begin("http://41.82.243.55:1026/v2/entities/Room5");
+    int httpCode = http.GET();
+    if (httpCode > 0) 
+    {
+      const size_t bufferSize = JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(5) + JSON_OBJECT_SIZE(8) + 370;
+      DynamicJsonBuffer jsonBuffer(bufferSize);
+      JsonObject& root = jsonBuffer.parseObject(http.getString());
+ 
+     // String id = root["pressure"];
+
+ //      digitalWrite(output5, HIGH);
+      const char* values = root["pressure"]["value"]; 
+      //const char* username = root["username"]; 
+      //const char* email = root["email"]; 
+
+      //Serial.print(id);
+      Serial.println(values);
+      //Serial.print("Username:");
+      //Serial.println(username);
+      //Serial.print("Email:");
+      //Serial.println(email);
+    }
+    http.end(); //Close connection
+ */
+    http.end(); //Close connection
+
+  }
+  delay(60000);
+}
+
